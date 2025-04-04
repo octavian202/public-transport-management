@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Stop {
+  id           String        @id @default(uuid())
+  name         String
+  latitude     Float
+  longitude    Float
+  accessibility String?      // Accessibility features
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  RouteStop    RouteStop[]   // Many-to-many relationship with Route
+}
+
+model Vehicle {
+  id         String     @id @default(uuid())
+  type       String     // Bus, tram, etc.
+  capacity   Int        // Maximum passenger capacity
+  features   String?    // Any special features
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  trips      Trip[]     // One-to-many relationship with Trip
+}
+
+model Route {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  operatingHours String?    // Operating hours information
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  routeStops    RouteStop[] // Many-to-many relationship with Stop
+  trips         Trip[]      // One-to-many relationship with Trip
+}
+
+// Join table for the many-to-many relationship between Route and Stop
+model RouteStop {
+  id            String   @id @default(uuid())
+  route         Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId       String
+  stop          Stop     @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  stopId        String
+  stopOrder     Int      // Order of the stop in the route
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([routeId, stopId])
+}
+
+model Trip {
+  id          String       @id @default(uuid())
+  route       Route        @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId     String
+  vehicle     Vehicle      @relation(fields: [vehicleId], references: [id])
+  vehicleId   String
+  date        DateTime     // Date of the trip
+  departureTime DateTime   // Departure time
+  arrivalTime   DateTime   // Arrival time
+  status      String       // Scheduled, Active, Completed, Cancelled
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  occupancyData OccupancyData[]
+}
+
+model OccupancyData {
+  id          String    @id @default(uuid())
+  trip        Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  tripId      String
+  timestamp   DateTime  // When the occupancy was recorded
+  count       Int       // Current passenger count
+  percentage  Float     // Occupancy percentage of vehicle capacity
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// For storing ML predictions and optimization results
+model Prediction {
+  id          String    @id @default(uuid())
+  routeId     String    // Not a relation to allow for future predictions
+  date        DateTime
+  predictedOccupancy Json // JSON data with predicted occupancy by time
+  confidence  Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model User {
+  id            String    @id // This will match the Supabase Auth user UUID
+  email         String    @unique
+  username      String?   @unique
+  role          String    @default("USER") // e.g., "USER", "ADMIN", "OPERATOR"
+  firstName     String?
+  lastName      String?
+  phoneNumber   String?
+  avatarUrl     String?
+  preferences   Json?     // User preferences as JSON
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // You can add relations to other models if needed, for example:
+  // trips        Trip[]     // Trips created or managed by this user
+  // predictions  Prediction[] // Predictions created by this user
+}
