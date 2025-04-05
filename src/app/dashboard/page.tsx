@@ -10,7 +10,6 @@ import { AddRoute } from "./components/AddRoute";
 import AdminHeader from "@/components/AdminHeader";
 import { fetchRoutes, fetchRouteDetails, acceptSuggestion } from "./actions";
 import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
 
 // Define types based on Prisma schema
 interface RouteStop {
@@ -55,7 +54,7 @@ export default function Dashboard() {
         const data = await fetchRoutes();
         setRoutes(data as Route[]);
       } catch (error) {
-        toast.error("Failed to load routes");
+        toast.error("Failed to load routes" + error);
       }
     }
     loadRoutes();
@@ -66,7 +65,7 @@ export default function Dashboard() {
       const routeDetails = await fetchRouteDetails(routeId);
       setSelectedRoute(routeDetails);
     } catch (error) {
-      toast.error("Failed to load route details");
+      toast.error("Failed to load route details" + error);
     }
   };
 
@@ -80,7 +79,7 @@ export default function Dashboard() {
         setSelectedRoute(updatedRoute);
       }
     } catch (error) {
-      toast.error("Failed to accept suggestion");
+      toast.error("Failed to accept suggestion" + error);
     }
   };
 
