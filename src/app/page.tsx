@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { loginAction, signupAction, logoutAction } from "@/actions/auth";
-import { createClient } from "@/utils/supabase/server";
+import { logoutAction } from "@/actions/auth";
+import { getUser } from "@/utils/supabase/server";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -8,16 +8,14 @@ import HowItWorksSection from "@/components/HowItWorksSection";
 import Footer from "@/components/Footer";
 
 export default async function Home() {
-  const supabase = await createClient();
+  const user = await getUser();
 
-  const { data, error } = await supabase.auth.getUser();
+  console.log(user);
 
-  console.log(data?.user);
-
-  if (!error && data.user) {
+  if (user) {
     return (
       <div>
-        {data.user.email}
+        {user.email}
 
         <form>
           <button formAction={logoutAction}>sign out</button>

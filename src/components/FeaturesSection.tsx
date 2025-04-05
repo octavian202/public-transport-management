@@ -9,7 +9,7 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <div className="feature-card flex-1 basis-64 max-w-sm">
+    <div className="feature-card flex-1 basis-64 max-w-sm md:shadow sm:rounded-lg p-5 text-center md:text-left">
       <div className="text-5xl text-blue-500 mb-4">{icon}</div>
       <h3 className="text-2xl font-bold text-blue-800 mb-4">{title}</h3>
       <p>{description}</p>
@@ -60,8 +60,10 @@ export default function FeaturesSection() {
   return (
     <section id="features" className="py-20 bg-white">
       <div className="container mx-auto px-4">
-        <h2 className="section-title">Key Features</h2>
-        <div className="flex flex-wrap justify-center gap-8">
+        <h1 className="section-title text-5xl font-bold text-blue-800 mb-16 text-center">
+          Key Features
+        </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((feature, index) => (
             <FeatureCard
               key={index}

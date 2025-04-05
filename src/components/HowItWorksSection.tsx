@@ -53,7 +53,9 @@ export default function HowItWorksSection() {
   return (
     <section id="how-it-works" className="py-20 bg-slate-100">
       <div className="container mx-auto px-4">
-        <h2 className="section-title">How It Works</h2>
+        <h1 className="section-title text-5xl font-bold text-blue-800 mb-16 text-center">
+          How It Works
+        </h1>
         <div className="max-w-3xl mx-auto">
           {steps.map((step, index) => (
             <Step

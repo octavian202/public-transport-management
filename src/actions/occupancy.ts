@@ -1,29 +1,44 @@
 "use server";
 
+import { z } from "zod";
 import { prisma } from "../lib/db";
 import { revalidatePath } from "next/cache";
 
-/**
- * Records new occupancy data for a specific trip.
- *
- * @param {FormData} formData - A FormData object containing `tripId`, `count`, and `vehicleCapacity`.
- * @returns {Promise<{ success: boolean; data?: any; error?: string }>} A result object with success status, data, or an error message.
- */
+// ======= ZOD SCHEMAS =======
+
+const OccupancyFormSchema = z.object({
+  tripId: z.string().min(1),
+  count: z.coerce.number().int().nonnegative(),
+  vehicleCapacity: z.coerce.number().int().positive(),
+});
+
+const RouteQuerySchema = z.object({
+  routeId: z.string().min(1),
+  startDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Invalid start date format",
+  }),
+  endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Invalid end date format",
+  }),
+});
+
+// ======= FUNCTIONS =======
+
 export async function recordOccupancy(
   formData: FormData
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    const tripId = formData.get("tripId") as string | null;
-    const count = parseInt(formData.get("count") as string, 10);
-    const vehicleCapacity = parseInt(
-      formData.get("vehicleCapacity") as string,
-      10
-    );
+    const data = OccupancyFormSchema.safeParse({
+      tripId: formData.get("tripId"),
+      count: formData.get("count"),
+      vehicleCapacity: formData.get("vehicleCapacity"),
+    });
 
-    if (!tripId || isNaN(count) || isNaN(vehicleCapacity)) {
+    if (!data.success) {
       return { success: false, error: "Invalid input data" };
     }
 
+    const { tripId, count, vehicleCapacity } = data.data;
     const percentage = (count / vehicleCapacity) * 100;
 
     const occupancyRecord = await prisma.occupancyData.create({
@@ -42,12 +57,6 @@ export async function recordOccupancy(
   }
 }
 
-/**
- * Retrieves occupancy data for a specific trip.
- *
- * @param {string} tripId - The ID of the trip to retrieve occupancy data for.
- * @returns {Promise<{ success: boolean; data?: any; error?: string }>} The result object with the occupancy data or an error.
- */
 export async function getTripOccupancy(
   tripId: string
 ): Promise<{ success: boolean; data?: any; error?: string }> {
@@ -64,29 +73,25 @@ export async function getTripOccupancy(
   }
 }
 
-/**
- * Retrieves historical occupancy data for all trips of a route between two dates.
- *
- * @param {string} routeId - The ID of the route.
- * @param {string} startDate - The start date in ISO format (YYYY-MM-DD).
- * @param {string} endDate - The end date in ISO format (YYYY-MM-DD).
- * @returns {Promise<{ success: boolean; data?: any; error?: string }>} Result with occupancy data or error.
- */
 export async function getRouteOccupancy(
   routeId: string,
   startDate: string,
   endDate: string
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const parsed = RouteQuerySchema.safeParse({ routeId, startDate, endDate });
+    if (!parsed.success) {
+      return { success: false, error: "Invalid route or date range" };
+    }
+
+    const { startDate: start, endDate: end } = parsed.data;
 
     const data = await prisma.trip.findMany({
       where: {
         routeId,
         date: {
-          gte: start,
-          lte: end,
+          gte: new Date(start),
+          lte: new Date(end),
         },
       },
       include: {
@@ -110,14 +115,6 @@ export async function getRouteOccupancy(
   }
 }
 
-/**
- * Calculates the average occupancy percentage per hour across trips for a given route and time range.
- *
- * @param {string} routeId - The ID of the route.
- * @param {string} startDate - The start date in ISO format (YYYY-MM-DD).
- * @param {string} endDate - The end date in ISO format (YYYY-MM-DD).
- * @returns {Promise<{ success: boolean; data?: Array<{ hour: number; averageOccupancy: number }>; error?: string }>} An array of hourly averages or an error.
- */
 export async function getRouteOccupancyByHour(
   routeId: string,
   startDate: string,
@@ -128,15 +125,19 @@ export async function getRouteOccupancyByHour(
   error?: string;
 }> {
   try {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const parsed = RouteQuerySchema.safeParse({ routeId, startDate, endDate });
+    if (!parsed.success) {
+      return { success: false, error: "Invalid input parameters" };
+    }
+
+    const { startDate: start, endDate: end } = parsed.data;
 
     const trips = await prisma.trip.findMany({
       where: {
         routeId,
         date: {
-          gte: start,
-          lte: end,
+          gte: new Date(start),
+          lte: new Date(end),
         },
       },
       include: {
@@ -179,14 +180,6 @@ export async function getRouteOccupancyByHour(
   }
 }
 
-/**
- * Fetches and transforms occupancy data for heatmap visualization by route and date range.
- *
- * @param {string} routeId - The ID of the route.
- * @param {string} startDate - The start date in ISO format (YYYY-MM-DD).
- * @param {string} endDate - The end date in ISO format (YYYY-MM-DD).
- * @returns {Promise<{ success: boolean; data?: Array<{ time: Date; stopName: string; occupancy: number }>; error?: string }>} Heatmap data or error.
- */
 export async function getHeatmapData(
   routeId: string,
   startDate: string,
@@ -197,15 +190,19 @@ export async function getHeatmapData(
   error?: string;
 }> {
   try {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const parsed = RouteQuerySchema.safeParse({ routeId, startDate, endDate });
+    if (!parsed.success) {
+      return { success: false, error: "Invalid input parameters" };
+    }
+
+    const { startDate: start, endDate: end } = parsed.data;
 
     const trips = await prisma.trip.findMany({
       where: {
         routeId,
         date: {
-          gte: start,
-          lte: end,
+          gte: new Date(start),
+          lte: new Date(end),
         },
       },
       include: {

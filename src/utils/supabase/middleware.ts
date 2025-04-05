@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { auth } from "firebase-admin";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -35,26 +36,21 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
 
+  // protected routes
+  const protectedRoutes = ["/dashboard", "/profile", "/settings"];
+  const authRoutes = ["/login", "signup", "/reset", "/update-password"];
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (
-    !user &&
-    request.nextUrl.pathname !== "/" &&
-    request.nextUrl.pathname !== "/login" &&
-    request.nextUrl.pathname !== "/signup"
-  ) {
+  if (!user && protectedRoutes.includes(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (
-    user &&
-    (request.nextUrl.pathname === "/login" ||
-      request.nextUrl.pathname === "/signup")
-  ) {
+  if (user && authRoutes.includes(request.nextUrl.pathname)) {
     // If the user is logged in and tries to access the login or signup page,
     // redirect them to the home page
     const url = request.nextUrl.clone();

@@ -15,7 +15,7 @@ export default function Header() {
 
         {/* Mobile menu button */}
         <button
-          className="md:hidden text-white focus:outline-none"
+          className="md:hidden text-white focus:outline-none cursor-pointer"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           <svg
@@ -52,7 +52,10 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link href="/signup" className="cta-button py-2 px-4">
+              <Link
+                href="/signup"
+                className="cta-button py-2 px-4 md:shadow bg-blue-600 rounded-lg"
+              >
                 Sign Up
               </Link>
             </li>
@@ -65,31 +68,21 @@ export default function Header() {
         <div className="md:hidden mt-4 pb-4">
           <ul className="flex flex-col space-y-4">
             <li>
-              <a
-                href="#features"
-                className="nav-link block"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Features
-              </a>
-            </li>
-            <li>
-              <a
-                href="#how-it-works"
-                className="nav-link block"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                How It Works
-              </a>
-            </li>
-
-            <li>
               <Link
                 href="/login"
-                className="cta-button py-2 px-4 inline-block"
+                className="cta-button py-2 px-4 inline-block w-full text-center"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Log In
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/signup"
+                className="cta-button py-2 px-4 inline-block w-full text-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign up
               </Link>
             </li>
           </ul>
