@@ -20,7 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "cli-progress": "^3.12.0",
     "clsx": "^2.1.1",
-    "faker": "^6.6.6",
+    "faker": "^5.5.3",
     "gl-matrix": "^3.4.3",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.487.0",
