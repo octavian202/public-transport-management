@@ -47,7 +47,7 @@ export default function Header() {
         <nav className="hidden md:block">
           <ul className="flex space-x-8 items-center">
             <li>
-              <Link href="/login" className="cta-button py-2 px-4">
+              <Link href="/login" className="cta-button py-2 px-4 ">
                 Log In
               </Link>
             </li>
@@ -65,12 +65,12 @@ export default function Header() {
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <div className="md:hidden mt-4 pb-4">
+        <div className="md:hidden mt-4 pb-4 pt-5">
           <ul className="flex flex-col space-y-4">
             <li>
               <Link
                 href="/login"
-                className="cta-button py-2 px-4 inline-block w-full text-center"
+                className="cta-button py-2 px-4 inline-block w-full text-center text-2xl"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Log In
@@ -79,7 +79,7 @@ export default function Header() {
             <li>
               <Link
                 href="/signup"
-                className="cta-button py-2 px-4 inline-block w-full text-center"
+                className="cta-button py-2 px-4 inline-block w-full text-center text-2xl"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sign up

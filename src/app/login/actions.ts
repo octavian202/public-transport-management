@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -37,5 +38,6 @@ export async function loginAction(
     };
   }
 
+  revalidatePath("/", "layout");
   return { message: "Logged in successfully", errors: [] };
 }

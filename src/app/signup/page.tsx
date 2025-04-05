@@ -5,6 +5,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { signupAction } from "./actions";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const emailValidator = z.string().email({ message: "Invalid email address" });
 
@@ -31,11 +32,13 @@ const usernameValidator = z
     message: "Username can only contain letters, numbers, and underscores",
   });
 
-export default function () {
+export default function SignupPage() {
   const [serverState, formAction] = useActionState(signupAction, {
     message: "",
     errors: [],
   });
+
+  const router = useRouter();
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -55,7 +58,7 @@ export default function () {
   useEffect(() => {
     const validatedEmail = emailValidator.safeParse(email);
 
-    if (!validatedEmail.success) {
+    if (!validatedEmail.success && email.length > 0) {
       setEmailErrors(validatedEmail.error.errors.map((error) => error.message));
     } else {
       setEmailErrors([]);
@@ -64,7 +67,7 @@ export default function () {
 
   useEffect(() => {
     const validatedPassword = passwordValidator.safeParse(password);
-    if (!validatedPassword.success) {
+    if (!validatedPassword.success && password.length > 0) {
       setPasswordErrors(
         validatedPassword.error.errors.map((error) => error.message)
       );
@@ -111,16 +114,17 @@ export default function () {
   }, [emailErrors, passwordErrors, usernameErrors, confirmPasswordErrors]);
 
   useEffect(() => {
-    if (serverState && serverState.errors && serverState.errors.length > 0) {
-      serverState.errors.forEach((error) => {
-        toast.error(error);
-      });
-    } else if (
-      serverState &&
-      serverState.message &&
-      serverState.errors?.length === 0
-    ) {
-      toast.success(serverState.message);
+    if (serverState.message) {
+      if (serverState.errors && serverState.errors.length > 0) {
+        serverState.errors.forEach((error) => {
+          toast.error(error);
+        });
+      } else {
+        toast.success(serverState.message);
+        setTimeout(() => {
+          router.push("/login");
+        }, 500);
+      }
     }
   }, [serverState]);
 
@@ -146,13 +150,13 @@ export default function () {
         </p>
       </div>
       <div>
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="mt-8 mx-auto max-w-[90%] md:max-w-[70%] lg:max-w-lg">
+          <div className="bg-white py-8 px-4 shadow rounded-lg sm:px-10">
             <form className="space-y-6">
               <div>
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 pl-1"
                 >
                   Username
                 </label>
@@ -179,7 +183,7 @@ export default function () {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 pl-1"
                 >
                   Email address
                 </label>
@@ -207,11 +211,11 @@ export default function () {
                 </div>
               )}
 
-              <div className="flex justify-between gap-4">
-                <div>
+              <div className="flex flex-col md:flex-row justify-between gap-4">
+                <div className="w-full">
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 pl-1"
                   >
                     Password
                   </label>
@@ -228,10 +232,10 @@ export default function () {
                   </div>
                 </div>
 
-                <div>
+                <div className="w-full">
                   <label
                     htmlFor="c_password"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 pl-1"
                   >
                     Confirm Password
                   </label>
@@ -265,7 +269,7 @@ export default function () {
               <div>
                 <label
                   htmlFor="roles"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 mb-1 pl-1"
                 >
                   Choose your role:
                 </label>
@@ -284,12 +288,12 @@ export default function () {
                 </select>
               </div>
 
-              <div>
+              <div className="pt-2">
                 <button
                   formAction={formAction}
                   disabled={!allGood}
                   type="submit"
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 hover:cursor-pointer hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-lg w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm font-medium text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 hover:cursor-pointer hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sign up
                 </button>

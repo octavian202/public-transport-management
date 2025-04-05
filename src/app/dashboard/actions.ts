@@ -8,6 +8,9 @@ export async function fetchRoutes() {
   });
 }
 
+export type RouteDetails = {
+  id: string;
+};
 export async function fetchRouteDetails(routeId: string) {
   return await prisma.route.findUnique({
     where: { id: routeId },

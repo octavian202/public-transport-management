@@ -8,7 +8,7 @@ interface StepProps {
 
 function Step({ number, title, description }: StepProps) {
   return (
-    <div className="flex flex-col md:flex-row items-center md:items-start mb-16 last:mb-0">
+    <div className="max-w-[70%] mx-auto flex flex-col md:flex-row items-center md:items-start mb-16 last:mb-0">
       <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-800 text-white flex items-center justify-center text-xl font-bold mb-4 md:mb-0 md:mr-8">
         {number}
       </div>

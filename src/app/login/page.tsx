@@ -5,6 +5,7 @@ import React, { useActionState, useEffect } from "react";
 import { z } from "zod";
 import { loginAction } from "./actions";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const emailSchema = z.string().email({ message: "Invalid email address" });
 const passwordSchema = z.string().nonempty({ message: "Password is required" });
@@ -14,6 +15,8 @@ export default function LoginPage() {
     message: "",
     errors: [],
   });
+
+  const router = useRouter();
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -58,12 +61,11 @@ export default function LoginPage() {
         serverState.errors.forEach((error) => {
           toast.error(error);
         });
-      } else if (
-        serverState &&
-        serverState.message &&
-        serverState.errors?.length === 0
-      ) {
+      } else {
         toast.success(serverState.message);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 500);
       }
     }
   }, [serverState]);
@@ -89,99 +91,101 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" action={formAction}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="Your email address"
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  onChange={(e) => setEmail(e.target.value)}
-                  value={email}
-                />
-              </div>
-            </div>
-            {emailErrors.length > 0 && email.length > 0 && (
-              <div className="text-red-500 text-sm">
-                {emailErrors.map((error, index) => (
-                  <p key={index}>X {error}</p>
-                ))}
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  placeholder="Your password"
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  onChange={(e) => setPassword(e.target.value)}
-                  value={password}
-                />
-              </div>
-            </div>
-            {passwordErrors.length > 0 && password.length > 0 && (
-              <div className="text-red-500 text-sm">
-                {passwordErrors.map((error, index) => (
-                  <p key={index}>X {error}</p>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <Link
-                  href="/reset"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+      <div>
+        <div className="mt-8 mx-auto max-w-[90%] md:max-w-[60%] lg:max-w-lg">
+          {" "}
+          <div className="bg-white py-8 px-4 shadow rounded-lg sm:px-10">
+            <form className="space-y-6" action={formAction}>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 pl-1"
                 >
-                  Forgot your password?
-                </Link>
+                  Email address
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="Your email address"
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    onChange={(e) => setEmail(e.target.value)}
+                    value={email}
+                  />
+                </div>
               </div>
-            </div>
+              {emailErrors.length > 0 && email.length > 0 && (
+                <div className="text-red-500 text-sm">
+                  {emailErrors.map((error, index) => (
+                    <p key={index}>X {error}</p>
+                  ))}
+                </div>
+              )}
 
-            <div>
-              <button
-                type="submit"
-                disabled={!allGood}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 hover:shadow-lg hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sign in
-              </button>
-            </div>
-          </form>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 pl-1"
+                >
+                  Password
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    placeholder="Your password"
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    onChange={(e) => setPassword(e.target.value)}
+                    value={password}
+                  />
+                </div>
+              </div>
+              {passwordErrors.length > 0 && password.length > 0 && (
+                <div className="text-red-500 text-sm">
+                  {passwordErrors.map((error, index) => (
+                    <p key={index}>X {error}</p>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <div className="text-sm">
+                  <Link
+                    href="/reset"
+                    className="font-medium text-blue-600 hover:text-blue-500"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={!allGood}
+                  className="text-lg w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm font-medium text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 hover:shadow-lg hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sign in
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <div className="mt-8 text-center">
-        <Link
-          href="/"
-          className="text-blue-600 hover:text-blue-500 font-medium"
-        >
-          ← Back to home
-        </Link>
+        <div className="mt-8 text-center">
+          <Link
+            href="/"
+            className="text-blue-600 hover:text-blue-500 font-medium"
+          >
+            ← Back to home
+          </Link>
+        </div>
       </div>
     </div>
   );

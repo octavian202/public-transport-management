@@ -1,7 +1,7 @@
 // components/Header.tsx
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { logoutAction } from "@/actions/auth";
 
 export default function AdminHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,14 +47,14 @@ export default function AdminHeader() {
         <nav className="hidden md:block">
           <ul className="flex space-x-8 items-center">
             <li>
-              <Link href="/dashboard" className="cta-button py-2 px-4">
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link href="/analytics" className="cta-button py-2 px-4">
-                Analytics
-              </Link>
+              <form>
+                <button
+                  formAction={logoutAction}
+                  className="hover:cursor-pointer cta-button py-2 px-4 md:shadow bg-blue-600 rounded-lg cursor"
+                >
+                  Sign Out
+                </button>
+              </form>
             </li>
           </ul>
         </nav>
@@ -65,22 +65,14 @@ export default function AdminHeader() {
         <div className="md:hidden mt-4 pb-4">
           <ul className="flex flex-col space-y-4">
             <li>
-              <Link
-                href="/dashboard"
-                className="cta-button py-2 px-4 inline-block w-full text-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/analytics"
-                className="cta-button py-2 px-4 inline-block w-full text-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Analytics
-              </Link>
+              <form>
+                <button
+                  formAction={logoutAction}
+                  className="cta-button py-2 px-4 inline-block w-full text-center "
+                >
+                  Sign Out
+                </button>
+              </form>
             </li>
           </ul>
         </div>

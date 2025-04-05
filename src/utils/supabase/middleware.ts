@@ -1,5 +1,4 @@
 import { createServerClient } from "@supabase/ssr";
-import { auth } from "firebase-admin";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {

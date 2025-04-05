@@ -9,7 +9,7 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <div className="feature-card flex-1 basis-64 w-full md:max-w-sm md:shadow sm:rounded-lg p-5 text-center md:text-left">
+    <div className="feature-card flex-1 mx-auto basis-64 w-full max-w-[70%] md:max-w-sm shadow-md sm:rounded-lg p-5 text-center md:text-left">
       <div className="text-5xl text-blue-500 mb-4">{icon}</div>
       <h3 className="text-2xl font-bold text-blue-800 mb-4">{title}</h3>
       <p>{description}</p>
