@@ -2,30 +2,62 @@
 
 import { prisma } from "../lib/db";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
-/**
- * Retrieves all routes with basic information.
- *
- * @returns {Promise<Array<{id: string, name: string, description: string | null, operatingHours: string | null}>>}
- * A promise that resolves to an array of route objects containing id, name, description, and operatingHours.
- *
- * @throws {Error} Throws an error if the database query fails.
- *
- * @example
- * ```typescript
- * const routes = await getAllRoutes();
- * console.log(`Found ${routes.length} routes`);
- * routes.forEach(route => console.log(`${route.id}: ${route.name}`));
- * ```
- */
-export async function getAllRoutes(): Promise<
-  {
+// --- Shared Route Type ---
+export type RouteBase = {
+  id: string;
+  name: string;
+  description: string | null;
+  operatingHours: string | null;
+};
+
+// --- Full Route Details with Stops & Trips ---
+export type RouteDetails = RouteBase & {
+  routeStops: {
+    stopOrder: number;
+    stop: {
+      id: string;
+      name: string;
+      location: string;
+    };
+  }[];
+  trips: {
     id: string;
-    name: string;
-    description: string | null;
-    operatingHours: string | null;
-  }[]
-> {
+    departureTime: Date;
+    vehicle: {
+      id: string;
+      licensePlate: string;
+    };
+  }[];
+};
+
+// --- Zod Schema for FormData ---
+const routeSchema = z.object({
+  name: z.string().min(1, "Route name is required"),
+  description: z.string().nullable().optional(),
+  operatingHours: z.string().nullable().optional(),
+});
+
+function parseFormData(formData: FormData): z.infer<typeof routeSchema> | null {
+  const data = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    operatingHours: formData.get("operatingHours"),
+  };
+
+  const parsed = routeSchema.safeParse({
+    name: data.name ?? "",
+    description: data.description === "" ? null : data.description,
+    operatingHours: data.operatingHours === "" ? null : data.operatingHours,
+  });
+
+  if (!parsed.success) return null;
+  return parsed.data;
+}
+
+// --- 1. Get All Routes ---
+export async function getAllRoutes(): Promise<RouteBase[]> {
   try {
     return await prisma.route.findMany({
       select: {
@@ -41,119 +73,48 @@ export async function getAllRoutes(): Promise<
   }
 }
 
-/**
- * Retrieves detailed information about a specific route, including stops and upcoming trips.
- *
- * @param {string} routeId - The unique identifier of the route to retrieve.
- *
- * @returns {Promise<any>} A promise that resolves to the route object with related stops and trips.
- * The returned object includes:
- * - Basic route details (id, name, description, operatingHours)
- * - Associated stops in order
- * - Upcoming trips (limited to 10) with vehicle information
- *
- * @throws {Error} Throws an error if the route cannot be found or if the database query fails.
- *
- * @example
- * ```typescript
- * try {
- *   const routeDetails = await getRouteDetails('route-123');
- *   console.log(`Route: ${routeDetails.name}`);
- *   console.log(`Stops: ${routeDetails.routeStops.length}`);
- *   console.log(`Upcoming trips: ${routeDetails.trips.length}`);
- * } catch (error) {
- *   console.error('Error fetching route details:', error);
- * }
- * ```
- */
-export async function getRouteDetails(routeId: string): Promise<any> {
+// --- 2. Get Route Details ---
+export async function getRouteDetails(
+  routeId: string
+): Promise<RouteDetails | null> {
   try {
-    return await prisma.route.findUnique({
+    const route = await prisma.route.findUnique({
       where: { id: routeId },
       include: {
         routeStops: {
-          include: {
-            stop: true,
-          },
-          orderBy: {
-            stopOrder: "asc",
-          },
+          include: { stop: true },
+          orderBy: { stopOrder: "asc" },
         },
         trips: {
-          where: {
-            date: {
-              gte: new Date(),
-            },
-          },
-          include: {
-            vehicle: true,
-          },
-          orderBy: {
-            departureTime: "asc",
-          },
-          take: 10, // Limit to upcoming trips
+          where: { date: { gte: new Date() } },
+          include: { vehicle: true },
+          orderBy: { departureTime: "asc" },
+          take: 10,
         },
       },
     });
+
+    return route as RouteDetails | null;
   } catch (error) {
     console.error(`Failed to fetch route details for ID ${routeId}:`, error);
     throw new Error("Failed to fetch route details");
   }
 }
 
-/**
- * Creates a new transit route.
- *
- * @param {FormData} formData - Form data containing route details:
- *   - name: (string, required) The name of the route
- *   - description: (string, optional) A description of the route
- *   - operatingHours: (string, optional) The operating hours of the route
- *
- * @returns {Promise<{ success: boolean; route?: any; error?: string }>} A promise that resolves to:
- *   - success: Boolean indicating if the operation succeeded
- *   - route: The created route object (only present if success is true)
- *   - error: Error message (only present if success is false)
- *
- * @example
- * ```typescript
- * const formData = new FormData();
- * formData.append('name', 'Downtown Express');
- * formData.append('description', 'Express route through downtown');
- * formData.append('operatingHours', 'Mon-Fri: 6AM-10PM');
- *
- * const result = await createRoute(formData);
- *
- * if (result.success) {
- *   console.log('Route created:', result.route);
- * } else {
- *   console.error('Failed to create route:', result.error);
- * }
- * ```
- */
+// --- 3. Create Route ---
 export async function createRoute(
   formData: FormData
-): Promise<{ success: boolean; route?: any; error?: string }> {
+): Promise<{ success: boolean; route?: RouteBase; error?: string }> {
   try {
-    // Extract data from formData
-    const name = formData.get("name") as string | null;
-    const description = formData.get("description") as string | null;
-    const operatingHours = formData.get("operatingHours") as string | null;
-
-    // Validate data
-    if (!name) {
-      return { success: false, error: "Route name is required" };
+    const parsed = parseFormData(formData);
+    if (!parsed) {
+      return { success: false, error: "Invalid form data" };
     }
 
-    // Create the route
     const newRoute = await prisma.route.create({
-      data: {
-        name,
-        description,
-        operatingHours,
-      },
+      data: parsed,
     });
 
-    // Revalidate the routes list
     revalidatePath("/routes");
 
     return { success: true, route: newRoute };
@@ -163,62 +124,22 @@ export async function createRoute(
   }
 }
 
-/**
- * Updates an existing route with new information.
- *
- * @param {string} routeId - The unique identifier of the route to update.
- * @param {FormData} formData - Form data containing updated route details:
- *   - name: (string, required) The updated name of the route
- *   - description: (string, optional) The updated description of the route
- *   - operatingHours: (string, optional) The updated operating hours of the route
- *
- * @returns {Promise<{ success: boolean; route?: any; error?: string }>} A promise that resolves to:
- *   - success: Boolean indicating if the operation succeeded
- *   - route: The updated route object (only present if success is true)
- *   - error: Error message (only present if success is false)
- *
- * @example
- * ```typescript
- * const formData = new FormData();
- * formData.append('name', 'Downtown Express Updated');
- * formData.append('description', 'Updated express route through downtown');
- * formData.append('operatingHours', 'Mon-Fri: 5AM-11PM');
- *
- * const result = await updateRoute('route-123', formData);
- *
- * if (result.success) {
- *   console.log('Route updated:', result.route);
- * } else {
- *   console.error('Failed to update route:', result.error);
- * }
- * ```
- */
+// --- 4. Update Route ---
 export async function updateRoute(
   routeId: string,
   formData: FormData
-): Promise<{ success: boolean; route?: any; error?: string }> {
+): Promise<{ success: boolean; route?: RouteBase; error?: string }> {
   try {
-    // Extract data from formData
-    const name = formData.get("name") as string | null;
-    const description = formData.get("description") as string | null;
-    const operatingHours = formData.get("operatingHours") as string | null;
-
-    // Validate data
-    if (!name) {
-      return { success: false, error: "Route name is required" };
+    const parsed = parseFormData(formData);
+    if (!parsed) {
+      return { success: false, error: "Invalid form data" };
     }
 
-    // Update the route
     const updatedRoute = await prisma.route.update({
       where: { id: routeId },
-      data: {
-        name,
-        description,
-        operatingHours,
-      },
+      data: parsed,
     });
 
-    // Revalidate the route details page
     revalidatePath(`/routes/${routeId}`);
 
     return { success: true, route: updatedRoute };
@@ -228,48 +149,15 @@ export async function updateRoute(
   }
 }
 
-/**
- * Updates the stops associated with a route and their ordering.
- * This operation replaces all existing stops with the new list of stops.
- *
- * @param {string} routeId - The unique identifier of the route whose stops are being updated.
- * @param {Array<{ stopId: string }>} stopsData - Array of stop objects, each containing a stopId.
- *   The order of stops in the array determines their sequence in the route.
- *
- * @returns {Promise<{ success: boolean; error?: string }>} A promise that resolves to:
- *   - success: Boolean indicating if the operation succeeded
- *   - error: Error message (only present if success is false)
- *
- * @example
- * ```typescript
- * const stopsData = [
- *   { stopId: 'stop-1' },
- *   { stopId: 'stop-2' },
- *   { stopId: 'stop-3' }
- * ];
- *
- * const result = await updateRouteStops('route-123', stopsData);
- *
- * if (result.success) {
- *   console.log('Route stops updated successfully');
- * } else {
- *   console.error('Failed to update route stops:', result.error);
- * }
- * ```
- */
+// --- 5. Update Route Stops ---
 export async function updateRouteStops(
   routeId: string,
   stopsData: { stopId: string }[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Start a transaction for atomicity
     await prisma.$transaction(async (tx) => {
-      // Delete all existing route stops
-      await tx.routeStop.deleteMany({
-        where: { routeId },
-      });
+      await tx.routeStop.deleteMany({ where: { routeId } });
 
-      // Create new route stops with the updated information
       for (let i = 0; i < stopsData.length; i++) {
         await tx.routeStop.create({
           data: {
@@ -281,7 +169,6 @@ export async function updateRouteStops(
       }
     });
 
-    // Revalidate the route details page
     revalidatePath(`/routes/${routeId}`);
 
     return { success: true };
@@ -291,32 +178,7 @@ export async function updateRouteStops(
   }
 }
 
-/**
- * Deletes a route and all associated data.
- *
- * @param {string} routeId - The unique identifier of the route to delete.
- *
- * @returns {Promise<{ success: boolean; error?: string }>} A promise that resolves to:
- *   - success: Boolean indicating if the operation succeeded
- *   - error: Error message (only present if success is false)
- *
- * @remarks
- * This operation will cascade delete all associated data depending on the database constraints:
- * - Route stops
- * - Route schedules
- * - Any other related entities with foreign key constraints
- *
- * @example
- * ```typescript
- * const result = await deleteRoute('route-123');
- *
- * if (result.success) {
- *   console.log('Route deleted successfully');
- * } else {
- *   console.error('Failed to delete route:', result.error);
- * }
- * ```
- */
+// --- 6. Delete Route ---
 export async function deleteRoute(
   routeId: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -325,7 +187,6 @@ export async function deleteRoute(
       where: { id: routeId },
     });
 
-    // Revalidate the routes list
     revalidatePath("/routes");
 
     return { success: true };

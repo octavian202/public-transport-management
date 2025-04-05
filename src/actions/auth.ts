@@ -44,10 +44,19 @@ export async function signupAction(formData: FormData) {
 
   const parsedData = result.data;
   const signupData = { email: parsedData.email, password: parsedData.password };
-  const { data, error } = await supabase.auth.signUp({
-    email: signupData.email,
-    password: signupData.password,
+
+  // verify if user already exists
+  const user = await prisma.user.findUnique({
+    where: {
+      email: parsedData.email,
+    },
   });
+
+  if (user) {
+    redirect("/login");
+  }
+
+  const { data, error } = await supabase.auth.signUp(signupData);
 
   if (error || !data.user) {
     console.log(error);
@@ -75,27 +84,28 @@ const loginSchema = z.object({
 });
 
 export async function loginAction(formData: FormData) {
+  const supabase = await createClient();
+
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
   const result = loginSchema.safeParse({ email, password });
 
   if (!result.success) {
+    console.log(result.error);
     redirect("/error");
   }
-
-  const supabase = await createClient();
 
   const parsedData = result.data;
   const loginData = { email: parsedData.email, password: parsedData.password };
-  const { error } = await supabase.auth.signInWithPassword({
-    email: loginData.email,
-    password: loginData.password,
-  });
+  const { error } = await supabase.auth.signInWithPassword(loginData);
 
   if (error) {
+    console.log(error);
     redirect("/error");
   }
+
+  console.log("login success");
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
