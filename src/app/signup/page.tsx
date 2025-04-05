@@ -1,9 +1,10 @@
 "use client";
 
-import { signupAction } from "@/actions/auth";
-import React, { useEffect } from "react";
+import React, { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { z } from "zod";
+import { signupAction } from "./actions";
+import { toast } from "sonner";
 
 const emailValidator = z.string().email({ message: "Invalid email address" });
 
@@ -31,6 +32,11 @@ const usernameValidator = z
   });
 
 export default function () {
+  const [serverState, formAction] = useActionState(signupAction, {
+    message: "",
+    errors: [],
+  });
+
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -43,6 +49,8 @@ export default function () {
   const [confirmPasswordErrors, setConfirmPasswordErrors] = React.useState<
     string[]
   >([]);
+  // const [serverErrors, setServerErrors] = React.useState<string[]>([]);
+  // const [serverMessage, setServerMessage] = React.useState<string | null>(null);
 
   useEffect(() => {
     const validatedEmail = emailValidator.safeParse(email);
@@ -67,7 +75,8 @@ export default function () {
 
   useEffect(() => {
     const validatedUsername = usernameValidator.safeParse(username);
-    if (!validatedUsername.success) {
+
+    if (!validatedUsername.success && username.length > 0) {
       setUsernameErrors(
         validatedUsername.error.errors.map((error) => error.message)
       );
@@ -89,13 +98,31 @@ export default function () {
       emailErrors.length === 0 &&
       passwordErrors.length === 0 &&
       usernameErrors.length === 0 &&
-      confirmPasswordErrors.length === 0
+      confirmPasswordErrors.length === 0 &&
+      email.length > 0 &&
+      password.length > 0 &&
+      confirmPassword.length > 0 &&
+      username.length > 0
     ) {
       setAllGood(true);
     } else {
       setAllGood(false);
     }
-  }, [emailErrors, passwordErrors, usernameErrors]);
+  }, [emailErrors, passwordErrors, usernameErrors, confirmPasswordErrors]);
+
+  useEffect(() => {
+    if (serverState && serverState.errors && serverState.errors.length > 0) {
+      serverState.errors.forEach((error) => {
+        toast.error(error);
+      });
+    } else if (
+      serverState &&
+      serverState.message &&
+      serverState.errors?.length === 0
+    ) {
+      toast.success(serverState.message);
+    }
+  }, [serverState]);
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -259,7 +286,7 @@ export default function () {
 
               <div>
                 <button
-                  formAction={signupAction}
+                  formAction={formAction}
                   disabled={!allGood}
                   type="submit"
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 hover:cursor-pointer hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"

@@ -1,14 +1,20 @@
 "use client";
 
-import { loginAction } from "@/actions/auth";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { useActionState, useEffect } from "react";
 import { z } from "zod";
+import { loginAction } from "./actions";
+import { toast } from "sonner";
 
 const emailSchema = z.string().email({ message: "Invalid email address" });
 const passwordSchema = z.string().nonempty({ message: "Password is required" });
 
 export default function LoginPage() {
+  const [serverState, formAction] = useActionState(loginAction, {
+    message: "",
+    errors: [],
+  });
+
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [allGood, setAllGood] = React.useState(false);
@@ -46,6 +52,22 @@ export default function LoginPage() {
     }
   }, [emailErrors, passwordErrors]);
 
+  useEffect(() => {
+    if (serverState.message) {
+      if (serverState.errors && serverState.errors.length > 0) {
+        serverState.errors.forEach((error) => {
+          toast.error(error);
+        });
+      } else if (
+        serverState &&
+        serverState.message &&
+        serverState.errors?.length === 0
+      ) {
+        toast.success(serverState.message);
+      }
+    }
+  }, [serverState]);
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -70,7 +92,7 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" action={loginAction}>
+          <form className="space-y-6" action={formAction}>
             <div>
               <label
                 htmlFor="email"
@@ -92,6 +114,13 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+            {emailErrors.length > 0 && email.length > 0 && (
+              <div className="text-red-500 text-sm">
+                {emailErrors.map((error, index) => (
+                  <p key={index}>X {error}</p>
+                ))}
+              </div>
+            )}
 
             <div>
               <label
@@ -114,6 +143,13 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+            {passwordErrors.length > 0 && password.length > 0 && (
+              <div className="text-red-500 text-sm">
+                {passwordErrors.map((error, index) => (
+                  <p key={index}>X {error}</p>
+                ))}
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div className="text-sm">
