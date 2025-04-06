@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import whiteLogo from "@/public/white_logo.png";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,7 +13,7 @@ export default function Header() {
       <div className="container mx-auto flex justify-between items-center">
         <div className="text-2xl font-bold flex items-center">
           {/*<span className="mr-2">🚌</span> OptiBus*/}
-          <Image src="/white_logo.png" alt="" />
+          <Image src={whiteLogo} alt="" width={200} height={50} />
         </div>
 
         {/* Mobile menu button */}

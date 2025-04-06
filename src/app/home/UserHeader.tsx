@@ -2,6 +2,8 @@
 "use client";
 import { useState } from "react";
 import { logoutAction } from "@/actions/auth";
+import Image from "next/image";
+import whiteLogo from "@/public/white_logo.png";
 
 export default function UserHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,7 +12,7 @@ export default function UserHeader() {
     <header className="bg-blue-800 text-white py-4 px-8 sticky top-0 z-50 shadow-md">
       <div className="container mx-auto flex justify-between items-center">
         <div className="text-2xl font-bold flex items-center">
-          <span className="mr-2">🚌</span> OptiBus
+          <Image src={whiteLogo} alt="" width={200} height={50} />
         </div>
 
         {/* Mobile menu button */}
@@ -68,7 +70,7 @@ export default function UserHeader() {
               <form>
                 <button
                   formAction={logoutAction}
-                  className="cta-button py-2 px-4 inline-block w-full text-center "
+                  className="cta-button py-2 px-4 inline-block w-full text-center text-2xl hover:cursor-pointer"
                 >
                   Sign Out
                 </button>

@@ -3,18 +3,20 @@
 import { prisma } from "@/lib/prisma";
 import { TripsData } from "./page";
 
-export function formatHHMM(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
-
 export async function getUpcomingTripsData(stopId: string): Promise<TripsData> {
+  function formatHHMM(date: Date): string {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
+
   const now = new Date(); // Get the current date and time
 
   // Calculate time range: now and 1 hour after now
 
   const oneHourAfter = new Date(now.getTime() + 60 * 60 * 1000);
+
+  console.log(oneHourAfter);
 
   // Format times into HH:MM strings
   const nowHHMM = formatHHMM(now);
@@ -46,61 +48,65 @@ export async function getUpcomingTripsData(stopId: string): Promise<TripsData> {
     };
   }
 
+  let weekdayFilter;
+  if (isTodayWeekday) {
+    weekdayFilter = {
+      isWeekday: true,
+    };
+  } else {
+    weekdayFilter = {
+      isWeekend: true,
+    };
+  }
+
   try {
+    // const result = await prisma.trip.findMany({
+    //   where: {
+    //     ...timeFilter,
+    //     timetableEntry: {
+    //       stopId: stopId,
+    //       ...weekdayFilter,
+    //     },
+    //   },
+    //   include: {
+    //     route: true,
+    //     occupancyData: true,
+    //     timetableEntry: true,
+    //   },
+    //   orderBy: {
+    //     departureTime: "asc",
+    //   },
+    // });
+
     const result = await prisma.timetableEntry.findMany({
       where: {
-        // Combine all conditions using AND (implicitly for top-level, explicitly if needed)
-        AND: [
-          // 1. Filter by the specific Stop ID
-          { stopId: stopId },
-
-          // 2. Filter by the correct day type (Weekday/Weekend)
-          isTodayWeekday ? { isWeekday: true } : { isWeekend: true },
-          // 3. Filter out entries specifically for holidays (adjust if needed)
-          { isHoliday: false },
-
-          // 4. Filter by validity dates (optional but recommended)
-          //    - Entry should have started (validFrom is null or in the past)
-          {
-            OR: [{ validFrom: null }, { validFrom: { lte: now } }],
-          },
-          //    - Entry should not have expired (validUntil is null or in the future)
-          {
-            OR: [{ validUntil: null }, { validUntil: { gte: now } }],
-          },
-
-          // 5. Apply the calculated time filter (handles midnight wrap-around)
-          timeFilter,
-        ],
+        stopId: stopId,
+        ...weekdayFilter,
+        ...timeFilter,
       },
       include: {
         route: true,
         trips: {
           include: {
-            occupancyData: true, // Include occupancy data if needed
+            occupancyData: true,
           },
         },
       },
       orderBy: {
-        // Optional: Order the results by departure time
         departureTime: "asc",
       },
-      // Optional: Include related data if needed
-      // include: {
-      //   route: true,
-      // }
     });
 
     console.log(
       `Found ${result.length} entries for stop ${stopId} within 1 hour.`
     );
 
-    // console.log(result);
+    console.log(result);
 
     result.map((timetableEntry) => console.log(timetableEntry));
 
     if (result.length === 0) {
-      console.log(`No timetable entries found for stop ${stopId}`);
+      console.log(`No trips found for stop ${stopId}`);
       return []; // Return an empty array if no entries are found
     }
 
@@ -134,4 +140,78 @@ export async function getUpcomingTripsData(stopId: string): Promise<TripsData> {
     console.error("Error fetching timetable entries:", error);
     throw error; // Re-throw the error for handling upstream
   }
+}
+
+export async function getUpcomingTripsForStop(
+  stopId: string
+): Promise<TripsData> {
+  const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+  const currentDay = now.getDay(); // 0 = Sun, 6 = Sat
+  const isWeekday = currentDay >= 1 && currentDay <= 5;
+  const isWeekend = currentDay === 0 || currentDay === 6;
+
+  const timetableEntries = await prisma.timetableEntry.findMany({
+    where: {
+      stopId,
+      OR: [{ isWeekday: isWeekday }, { isWeekend: isWeekend }],
+    },
+    select: {
+      id: true,
+      departureTime: true,
+    },
+  });
+
+  const entryIdsInNextHour: string[] = [];
+
+  for (const entry of timetableEntries) {
+    const [hour, minute] = entry.departureTime.split(":").map(Number);
+    const scheduledToday = new Date(now);
+    scheduledToday.setHours(hour, minute, 0, 0);
+    scheduledToday.setDate(now.getDate());
+    scheduledToday.setMonth(now.getMonth());
+    scheduledToday.setFullYear(now.getFullYear());
+
+    if (scheduledToday >= now && scheduledToday <= oneHourLater) {
+      // console.log(now, scheduledToday, oneHourLater);
+      entryIdsInNextHour.push(entry.id);
+    }
+  }
+
+  if (entryIdsInNextHour.length === 0) {
+    return [];
+  }
+
+  console.log(entryIdsInNextHour);
+
+  const trips = await prisma.trip.findMany({
+    where: {
+      timetableEntryId: { in: entryIdsInNextHour },
+    },
+    include: {
+      timetableEntry: true,
+      route: true,
+      occupancyData: true,
+    },
+  });
+
+  console.log(trips);
+
+  const tripsData = trips.map((trip) => ({
+    id: trip.id,
+    routeName: trip.route.name,
+    departureTime: trip.departureTime,
+    arrivalTime: trip.arrivalTime,
+    vehicleType: trip.vehicleType,
+    occupancyData: trip.occupancyData.map((data) => ({
+      timestamp: data.timestamp,
+      percentage: data.percentage,
+      seated: data.seated,
+      standing: data.standing,
+    })),
+    capacity: trip.capacity,
+  }));
+
+  return tripsData;
 }

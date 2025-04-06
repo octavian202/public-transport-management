@@ -1,5 +1,7 @@
 // components/Footer.tsx
 import Link from "next/link";
+import Image from "next/image";
+import whiteLogo from "@/public/white_logo.png";
 
 export default function Footer() {
   return (
@@ -7,7 +9,7 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center">
           <div className="text-2xl font-bold flex items-center mb-6">
-            <span className="mr-2">🚌</span> OptiBus
+            <Image src={whiteLogo} alt="" width={200} height={50} />
           </div>
 
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-6">

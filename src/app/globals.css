@@ -17,3 +17,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.map-fullscreen .h-128 {
+  height: 32rem; /* 512px */
+}
+
+/* Add responsive height for larger screens */
+@media (min-width: 1024px) {
+  .map-fullscreen .h-128 {
+    height: 40rem; /* 640px on larger screens */
+  }
+}
+
+/* If you want even more height on very large screens */
+@media (min-width: 1536px) {
+  .map-fullscreen .h-128 {
+    height: 48rem; /* 768px on very large screens */
+  }
+}

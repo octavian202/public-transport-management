@@ -64,6 +64,11 @@ export default function Dashboard() {
     try {
       const routeDetails = await fetchRouteDetails(routeId);
       setSelectedRoute(routeDetails);
+
+      // Automatically switch to map view when a route is selected
+      if (activeSection === "routes") {
+        setActiveSection("map");
+      }
     } catch (error) {
       toast.error("Failed to load route details" + error);
     }
@@ -83,20 +88,23 @@ export default function Dashboard() {
     }
   };
 
+  // Determine if we should use the full-width layout
+  const isMapView = activeSection === "map" && selectedRoute;
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Header */}
       <AdminHeader />
-      <div className="sm:mx-auto sm:w-full sm:max-w-md mt-12">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md mt-8">
         <div className="flex justify-center">
           <div className="text-3xl font-bold text-blue-800 flex items-center">
-            {/*<span className="mr-2">🚌</span> OptiBus */} Dashboard
+            Dashboard
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="mt-8 flex justify-center space-x-4 w-full overflow-x-auto">
+      <nav className="mt-6 flex justify-center space-x-4 w-full overflow-x-auto px-4">
         {["routes", "map", "suggestions", "reports", "fleet", "add route"].map(
           (section) => (
             <button
@@ -115,8 +123,12 @@ export default function Dashboard() {
       </nav>
 
       {/* Main Content */}
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-4xl">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div
+        className={`mt-6 mx-auto w-full ${
+          isMapView ? "max-w-6xl" : "max-w-4xl"
+        } px-4`}
+      >
+        <div className="bg-white py-6 px-4 shadow sm:rounded-lg sm:px-6">
           {activeSection === "routes" && (
             <RouteViewer
               routes={routes}

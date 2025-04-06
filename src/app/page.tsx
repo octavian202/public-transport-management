@@ -7,7 +7,9 @@ import FeaturesSection from "@/components/FeaturesSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import Footer from "@/components/Footer";
 import prisma from "@/lib/db";
+
 import Image from "next/image";
+import blueLogo from "@/public/blue_logo.png";
 
 export default async function Home() {
   const user = await getUser();
@@ -30,7 +32,7 @@ export default async function Home() {
           <div className="flex justify-center">
             <div className="text-3xl font-bold text-blue-800 flex items-center">
               {/*<span className="mr-2">🚌</span> OptiBus*/}
-              <Image src="/blue_logo.png" alt="" />
+              <Image src={blueLogo} alt="" width={200} height={50} />
             </div>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

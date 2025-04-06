@@ -663,7 +663,7 @@ async function generateTrips() {
 
     for (const [key, entries] of Object.entries(routeGroups)) {
       entries.sort(
-        (a, b) => a.stop.routeStop[0].stopOrder - b.stop.routeStop[0].stopOrder
+        (a, b) => a.stop.RouteStop[0].stopOrder - b.stop.RouteStop[0].stopOrder
       );
       if (entries.length < 2) continue;
 

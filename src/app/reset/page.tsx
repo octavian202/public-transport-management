@@ -4,6 +4,8 @@ import { resetPassword } from "@/actions/auth";
 import Link from "next/link";
 import React, { useEffect } from "react";
 import { z } from "zod";
+import Image from "next/image";
+import blueLogo from "@/public/blue_logo.png";
 
 const emailSchema = z.string().email({ message: "Invalid email address" });
 
@@ -27,7 +29,7 @@ export default function LoginPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="text-3xl font-bold text-blue-800 flex items-center">
-            <span className="mr-2">🚌</span> OptiBus
+            <Image src={blueLogo} alt="" width={200} height={50} />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

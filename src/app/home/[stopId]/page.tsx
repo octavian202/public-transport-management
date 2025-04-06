@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 
-import { formatHHMM, getUpcomingTripsData } from "./actions";
+import { getUpcomingTripsData, getUpcomingTripsForStop } from "./actions";
 import { usePathname } from "next/navigation";
 
 export type TripsData = {
@@ -35,6 +35,7 @@ export default function HomePage() {
 
   const [search, setSearch] = React.useState<string>("");
   const [tripsData, setTripsData] = React.useState<TripsData>([]);
+  const [filteredTrips, setFilteredTrips] = React.useState<TripsData>([]);
 
   const pathname = usePathname();
   const stopId = pathname.split("/").pop() as string;
@@ -42,7 +43,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await getUpcomingTripsData(stopId);
+        const data = await getUpcomingTripsForStop(stopId);
         setTripsData(data);
       } catch (error) {
         console.error("Error fetching timetable entries:", error);
@@ -52,38 +53,64 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  console.log(tripsData);
+  useEffect(() => {
+    if (filteredTrips.length === 0) {
+      setFilteredTrips([]);
+      return;
+    }
+    const filteredTripsData = tripsData.filter((trip) => {
+      return trip.routeName.toLowerCase().includes(search.toLowerCase());
+    });
+
+    setFilteredTrips(filteredTripsData);
+  }, [tripsData, search]);
+
+  console.log(filteredTrips);
 
   return (
     <div>
-      // search bar
+      {/* // search bar */}
       <input
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search for a stop..."
+        placeholder="Search for a route..."
         className="border border-gray-300 rounded p-2"
       />
       <ul className="mt-4">
         {tripsData.length === 0 && (
-          <li className="text-gray-500">No timetable entries found.</li>
+          <li className="text-gray-500">No trips found.</li>
         )}
         {tripsData.length > 0 &&
-          tripsData.map((trip) => (
-            <li key={trip.id} className="border-b py-2">
-              <div className="flex justify-between">
-                <span>{trip.routeName}</span>
-                <span>
-                  {/* // should display the difference between now and the arrival time in minutes */}
-                  {(trip.arrivalTime.getTime() - Date.now()) * 1000 * 60}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Vehicle Type: {trip.vehicleType}</span>
-                <span>Occupancy: {}</span>
-              </div>
-            </li>
-          ))}
+          tripsData.map((trip) => {
+            if (trip === null) {
+              return null; // Skip this entry if no trips are found
+            }
+            return (
+              <li key={trip.id} className="border-b py-2">
+                <div className="flex justify-between">
+                  <span>{trip.routeName}</span>
+                  <span>
+                    {/* // should display the difference between now and the arrival time in minutes */}
+                    arriving in{" "}
+                    {(trip.arrivalTime.getTime() - Date.now()) * 1000 * 60}{" "}
+                    minutes
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Vehicle Type: {trip.vehicleType}</span>
+                  <span>Capacity: {trip.capacity}</span>
+                  <span>Sitting seats: {trip.occupancyData.pop()?.seated}</span>
+                  <span>
+                    Standing seats: {trip.occupancyData.pop()?.standing}
+                  </span>
+                  <span>
+                    Occupancy: {trip.occupancyData.pop()?.percentage}%
+                  </span>
+                </div>
+              </li>
+            );
+          })}
       </ul>
     </div>
   );
