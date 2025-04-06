@@ -6,6 +6,7 @@ import { z } from "zod";
 import { loginAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const emailSchema = z.string().email({ message: "Invalid email address" });
 const passwordSchema = z.string().nonempty({ message: "Password is required" });
@@ -75,7 +76,8 @@ export default function LoginPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="text-3xl font-bold text-blue-800 flex items-center">
-            <span className="mr-2">🚌</span> OptiBus
+            {/*<span className="mr-2">🚌</span> OptiBus*/}
+            <Image src="/blue_logo.png" alt="" />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

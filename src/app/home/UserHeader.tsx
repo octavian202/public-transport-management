@@ -2,17 +2,15 @@
 "use client";
 import { useState } from "react";
 import { logoutAction } from "@/actions/auth";
-import Image from "next/image";
 
-export default function AdminHeader() {
+export default function UserHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="bg-blue-800 text-white py-4 px-8 sticky top-0 z-50 shadow-md">
       <div className="container mx-auto flex justify-between items-center">
         <div className="text-2xl font-bold flex items-center">
-          {/*<span className="mr-2">🚌</span> OptiBus*/}
-          <Image src="/white_logo.png" alt="" />
+          <span className="mr-2">🚌</span> OptiBus
         </div>
 
         {/* Mobile menu button */}

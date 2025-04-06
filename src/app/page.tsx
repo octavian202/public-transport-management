@@ -7,6 +7,7 @@ import FeaturesSection from "@/components/FeaturesSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import Footer from "@/components/Footer";
 import prisma from "@/lib/db";
+import Image from "next/image";
 
 export default async function Home() {
   const user = await getUser();
@@ -28,7 +29,8 @@ export default async function Home() {
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="flex justify-center">
             <div className="text-3xl font-bold text-blue-800 flex items-center">
-              <span className="mr-2">🚌</span> OptiBus
+              {/*<span className="mr-2">🚌</span> OptiBus*/}
+              <Image src="/blue_logo.png" alt="" />
             </div>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -48,6 +50,12 @@ export default async function Home() {
                 View Dashboard
               </Link>
             )}
+            <Link
+              href="/home"
+              className="text-lg mb-4 w-full flex justify-center py-2 px-4 rounded-md shadow-sm font-medium text-white bg-blue-800 hover:bg-blue-700 border-transparent border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 hover:shadow-lg hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Go to Home
+            </Link>
             <form>
               <button
                 formAction={logoutAction}

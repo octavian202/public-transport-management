@@ -54,7 +54,6 @@ model TimetableEntry {
   routeId       String
   stop          Stop        @relation(fields: [stopId], references: [id])
   stopId        String
-  dayOfWeek     Int         // 0-6 for Monday-Sunday
   departureTime String      // Time in HH:MM format (24-hour)
   isHoliday     Boolean     @default(false) // Whether this entry applies on holidays
   isWeekday     Boolean     @default(true)  // Whether this entry applies on weekdays
@@ -65,7 +64,6 @@ model TimetableEntry {
   updatedAt     DateTime    @updatedAt
   trips         Trip[]      // Trips that follow this timetable entry
   
-  @@index([routeId, dayOfWeek])
   @@index([stopId, departureTime])
 }
 
@@ -116,7 +114,7 @@ model User {
   id            String    @id // This will match the Supabase Auth user UUID
   email         String    @unique
   username      String?   @unique
-  role          String    @default("USER") // e.g., "USER", "ADMIN"
+  role          String    @default("USER") // e.g., "USER", "ADMIN",
   firstName     String?
   lastName      String?
   phoneNumber   String?
