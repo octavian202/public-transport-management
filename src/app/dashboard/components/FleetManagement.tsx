@@ -232,7 +232,7 @@ export function FleetManagement() {
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-blue-800 text-white">
               <th className="p-2">Route</th>
               <th className="p-2">Vehicle Type</th>
               <th className="p-2">Status</th>
@@ -275,6 +275,7 @@ export function FleetManagement() {
                     Details
                   </Button>
                   <Button
+                    className="cursor-pointer border hover:border hover:border-blue-800"
                     onClick={() => {
                       setSelectedTrip(trip);
                       setEditForm({
@@ -297,6 +298,7 @@ export function FleetManagement() {
                   </Button>
                   <Button
                     variant="destructive"
+                    className="bg-blue-800  cursor-pointer hover:bg-blue-700"
                     onClick={() => handleDeleteTrip(trip.id)}
                   >
                     Delete

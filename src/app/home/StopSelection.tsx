@@ -32,6 +32,7 @@ export default function StopSelection({
           )
           .map((stop) => (
             <Link
+              key={stop.id}
               href={`/home/${stop.id}`}
               className="text-blue-800 w-full bg-white  hover:bg-blue-800 hover:text-white"
             >

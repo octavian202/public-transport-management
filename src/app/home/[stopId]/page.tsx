@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 
-import { getUpcomingTripsData, getUpcomingTripsForStop } from "./actions";
+import { getUpcomingTripsForStop } from "./actions";
 import { usePathname } from "next/navigation";
 
 export type TripsData = {
